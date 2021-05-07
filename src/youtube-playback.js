@@ -1,7 +1,10 @@
-import {Events, Playback, Mediator, Styler, template} from 'Clappr'
+import { Events, Playback, Styler, template, Log } from '@clappr/core'
+import YouTubeIframeLoader from 'youtube-iframe'
 
 import playbackStyle from './public/style.css'
 import playbackHtml from './public/youtube.html'
+const REG_EXP = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/
+const AUTO = -1
 
 export default class YoutubePlayback extends Playback {
   get name() { return 'youtube_playback' }
@@ -17,7 +20,7 @@ export default class YoutubePlayback extends Playback {
   }
 
   get ended() { return false }
-  get buffering() { return this.player && this.player.getPlayerState() === YT.PlayerState.BUFFERING }
+  get buffering() { return this.YTPlayer && this.YTPlayer.getPlayerState() === YT.PlayerState.BUFFERING }
   get isReady() { return this._ready }
 
   constructor(options) {
@@ -29,25 +32,27 @@ export default class YoutubePlayback extends Playback {
       default: ['seekbar'],
       right:['fullscreen','volume', 'hd-indicator']
     }
-    Mediator.on(Events.PLAYER_RESIZE, this.updateSize, this)
-    this.embedYoutubeApiScript()
+    const match = this.options.source.match(REG_EXP)
+    this._src = match && match[7]
+    this.YTPlayer = null
+    this.YT = null
+    if (this.options.playback.controls || this.options.useVideoTagDefaultControls)
+      this.$el.attr('controls', '')
+    YouTubeIframeLoader.load((YT) => {
+      this.YT = YT
+      this.setupYoutubePlayer()
+    })
   }
 
   setupYoutubePlayer() {
-    if (window.YT && window.YT.Player) {
+    if (this.YT && this.YT.Player) {
       this.embedYoutubePlayer()
     } else {
       this.once(Events.PLAYBACK_READY, () => this.embedYoutubePlayer())
     }
-  }
-
-  embedYoutubeApiScript() {
-    let script = document.createElement('script')
-    script.setAttribute('type', 'text/javascript')
-    script.setAttribute('async', 'async')
-    script.setAttribute('src', 'https://www.youtube.com/iframe_api')
-    document.body.appendChild(script)
-    window.onYouTubeIframeAPIReady = () => this.ready()
+    if (!this.options.playback || !this.options.playback.controls) {
+      this.enableMediaControl()
+    }
   }
 
   embedYoutubePlayer() {
@@ -59,30 +64,57 @@ export default class YoutubePlayback extends Playback {
       iv_load_policy: 3,
       modestbranding: 1,
       showinfo: 0,
-      html5: 1
+      html5: 1,
+      origin: window.location.host
     }
-    if (this.options.youtubePlaylist) {
-      playerVars.listType = 'playlist'
-      playerVars.list = this.options.youtubePlaylist
-    }
-    this.player = new YT.Player(`yt${this.cid}`, {
-      videoId: this.options.src,
+    this.YTPlayer = new this.YT.Player(`yt${this.cid}`, {
+      videoId: this._src,
       playerVars: playerVars,
+      width: '100%',
+      height: '100%',
       events: {
         onReady: () => this.ready(),
         onStateChange: (event) => this.stateChange(event),
-        onPlaybackQualityChange: (event) => this.qualityChange(event)
+        onPlaybackQualityChange: (event) => this.qualityChange(event),
+        onError: (error) => onError(error)
       }
     })
   }
 
-  updateSize() {
-    this.player && this.player.setSize(this.$el.width(), this.$el.height())
+  onError(error) {
+    let formattedError
+    switch (error.data) {
+      case 2:
+        Log.error('Youtube: Invalide parameter.')
+        formattedError = this.createError(error)
+        this.trigger(Events.PLAYBACK_ERROR, formattedError)
+        this.stop()
+        break
+      case 5:
+        Log.error('Youtube: HTML5 player error.')
+        formattedError = this.createError(error)
+        this.trigger(Events.PLAYBACK_ERROR, formattedError)
+        this.stop()
+        break
+      case 100:
+        Log.error('Youtube: Video not found.')
+        formattedError = this.createError(error)
+        this.trigger(Events.PLAYBACK_ERROR, formattedError)
+        this.stop()
+        break
+      default:
+        Log.error('Youtube: Embed not allowed by user.')
+        formattedError = this.createError(error)
+        this.trigger(Events.PLAYBACK_ERROR, formattedError)
+        this.stop()
+        break
+    }
   }
 
   ready() {
     this._ready = true
-    this.trigger(Events.PLAYBACK_READY)
+    this.play()
+    this.trigger(Events.PLAYBACK_READY, this.name)
   }
 
   qualityChange(event) { // eslint-disable-line no-unused-vars
@@ -91,8 +123,7 @@ export default class YoutubePlayback extends Playback {
 
   stateChange(event) {
     switch (event.data) {
-    case YT.PlayerState.PLAYING: {
-      this.enableMediaControl()
+    case this.YT.PlayerState.PLAYING: {
       let playbackType = this.getPlaybackType()
       if (this._playbackType !== playbackType) {
         this.settings.changeCount++
@@ -103,13 +134,13 @@ export default class YoutubePlayback extends Playback {
       this.trigger(Events.PLAYBACK_PLAY)
       break
     }
-    case YT.PlayerState.PAUSED:
+    case this.YT.PlayerState.PAUSED:
       this.trigger(Events.PLAYBACK_PAUSE)
       break
-    case YT.PlayerState.BUFFERING:
+    case this.YT.PlayerState.BUFFERING:
       this.trigger(Events.PLAYBACK_BUFFERING)
       break
-    case YT.PlayerState.ENDED:
+    case this.YT.PlayerState.ENDED:
       if (this.options.youtubeShowRelated) {
         this.disableMediaControl()
       } else {
@@ -121,10 +152,10 @@ export default class YoutubePlayback extends Playback {
   }
 
   play() {
-    if (this.player) {
+    if (this.YTPlayer) {
       this._progressTimer = this._progressTimer || setInterval(() => this.progress(), 100)
       this._timeupdateTimer = this._timeupdateTimer || setInterval(() => this.timeupdate(), 100)
-      this.player.playVideo()
+      this.YTPlayer.playVideo()
     } else if (this._ready) {
       this.trigger(Events.PLAYBACK_BUFFERING)
       this._progressTimer = this._progressTimer || setInterval(() => this.progress(), 100)
@@ -139,48 +170,48 @@ export default class YoutubePlayback extends Playback {
   pause() {
     clearInterval(this._timeupdateTimer)
     this._timeupdateTimer = null
-    this.player && this.player.pauseVideo()
+    this.YTPlayer && this.YTPlayer.pauseVideo()
   }
 
   seek(time) {
-    if (!this.player) return
-    this.player.seekTo(time)
+    if (!this.YTPlayer) return
+    this.YTPlayer.seekTo(time)
   }
 
   seekPercentage(percentage) {
-    if (!this.player) return
-    let duration = this.player.getDuration()
+    if (!this.YTPlayer) return
+    let duration = this.YTPlayer.getDuration()
     let time = percentage * duration / 100
     this.seekTo(time)
   }
 
   volume(value) {
-    this.player && this.player.setVolume && this.player.setVolume(value)
+    this.YTPlayer && this.YTPlayer.setVolume && this.YTPlayer.setVolume(value)
   }
 
   progress() {
-    if (!this.player || !this.player.getDuration) return
-    let buffered = this.player.getDuration() * this.player.getVideoLoadedFraction()
-    this.trigger(Events.PLAYBACK_PROGRESS, {start: 0, current: buffered, total: this.player.getDuration()})
+    if (!this.YTPlayer || !this.YTPlayer.getDuration) return
+    let buffered = this.YTPlayer.getDuration() * this.YTPlayer.getVideoLoadedFraction()
+    this.trigger(Events.PLAYBACK_PROGRESS, {start: 0, current: buffered, total: this.YTPlayer.getDuration()})
   }
 
   timeupdate() {
-    if (!this.player || !this.player.getDuration) return
-    this.trigger(Events.PLAYBACK_TIMEUPDATE, {current: this.player.getCurrentTime(), total: this.player.getDuration()})
+    if (!this.YTPlayer || !this.YTPlayer.getDuration) return
+    this.trigger(Events.PLAYBACK_TIMEUPDATE, {current: this.YTPlayer.getCurrentTime(), total: this.YTPlayer.getDuration()})
   }
 
   isPlaying() {
-    return this.player && this.player.getPlayerState() == YT.PlayerState.PLAYING
+    return this.YTPlayer && this.YTPlayer.getPlayerState() == this.YT.PlayerState.PLAYING
   }
 
   isHighDefinitionInUse() {
-    return this.player && !!this.player.getPlaybackQuality().match(/^hd\d+/)
+    return this.YTPlayer && !!this.YTPlayer.getPlaybackQuality().match(/^hd\d+/)
   }
 
   getDuration() {
     let duration = 0
-    if (this.player) {
-      duration = this.player.getDuration()
+    if (this.YTPlayer) {
+      duration = this.YTPlayer.getDuration()
     }
     return duration
   }
@@ -208,5 +239,6 @@ export default class YoutubePlayback extends Playback {
 }
 
 YoutubePlayback.canPlay = function(source) { // eslint-disable-line no-unused-vars
-  return true
+  const match = source.match(REG_EXP)
+  return match && match[7].length === 11
 }
