@@ -26,19 +26,19 @@ const plugins = [
 
 const mainBundle = {
   input: 'src/youtube-playback.js',
-  external: ['@clappr/core'],
+  external: ['clappr'],
   output: [
     {
       name: 'YoutubePlayback',
       file: pkg.main,
       format: 'umd',
-      globals: { '@clappr/core': 'Clappr' },
+      globals: { 'clappr': 'Clappr' },
     },
     !!process.env.MINIMIZE && {
       name: 'YoutubePlayback',
       file: 'dist/clappr-youtube-playback.min.js',
       format: 'umd',
-      globals: { '@clappr/core': 'Clappr' },
+      globals: { 'clappr': 'Clappr' },
       plugins: terser(),
     },
   ],
@@ -52,7 +52,7 @@ const esmBundle = {
     name: 'YoutubePlayback',
     file: pkg.module,
     format: 'esm',
-    globals: { '@clappr/core': 'Clappr' },
+    globals: { 'clappr': 'Clappr' },
   },
   plugins: [
     babelPluginForESMBundle({

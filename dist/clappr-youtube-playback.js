@@ -1,8 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('@clappr/core')) :
-  typeof define === 'function' && define.amd ? define(['@clappr/core'], factory) :
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('clappr')) :
+  typeof define === 'function' && define.amd ? define(['clappr'], factory) :
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.YoutubePlayback = factory(global.Clappr));
-}(this, (function (core) { 'use strict';
+}(this, (function (clappr) { 'use strict';
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -238,7 +238,7 @@
     }, {
       key: "template",
       get: function get() {
-        return core.template(playbackHtml);
+        return clappr.template(playbackHtml);
       }
     }, {
       key: "attributes",
@@ -272,7 +272,7 @@
         if (this.YT && this.YT.Player) {
           this.embedYoutubePlayer();
         } else {
-          this.once(core.Events.PLAYBACK_READY, function () {
+          this.once(clappr.Events.PLAYBACK_READY, function () {
             return _this2.embedYoutubePlayer();
           });
         }
@@ -335,30 +335,30 @@
 
         switch (error.data) {
           case 2:
-            core.Log.error('Youtube: Invalide parameter.');
+            clappr.Log.error('Youtube: Invalide parameter.');
             formattedError = this.createError(error);
-            this.trigger(core.Events.PLAYBACK_ERROR, formattedError);
+            this.trigger(clappr.Events.PLAYBACK_ERROR, formattedError);
             this.stop();
             break;
 
           case 5:
-            core.Log.error('Youtube: HTML5 player error.');
+            clappr.Log.error('Youtube: HTML5 player error.');
             formattedError = this.createError(error);
-            this.trigger(core.Events.PLAYBACK_ERROR, formattedError);
+            this.trigger(clappr.Events.PLAYBACK_ERROR, formattedError);
             this.stop();
             break;
 
           case 100:
-            core.Log.error('Youtube: Video not found.');
+            clappr.Log.error('Youtube: Video not found.');
             formattedError = this.createError(error);
-            this.trigger(core.Events.PLAYBACK_ERROR, formattedError);
+            this.trigger(clappr.Events.PLAYBACK_ERROR, formattedError);
             this.stop();
             break;
 
           default:
-            core.Log.error('Youtube: Embed not allowed by user.');
+            clappr.Log.error('Youtube: Embed not allowed by user.');
             formattedError = this.createError(error);
-            this.trigger(core.Events.PLAYBACK_ERROR, formattedError);
+            this.trigger(clappr.Events.PLAYBACK_ERROR, formattedError);
             this.stop();
             break;
         }
@@ -368,13 +368,13 @@
       value: function ready() {
         this._ready = true;
         this.play();
-        this.trigger(core.Events.PLAYBACK_READY, this.name);
+        this.trigger(clappr.Events.PLAYBACK_READY, this.name);
       }
     }, {
       key: "qualityChange",
       value: function qualityChange(event) {
         // eslint-disable-line no-unused-vars
-        this.trigger(core.Events.PLAYBACK_HIGHDEFINITIONUPDATE, this.isHighDefinitionInUse());
+        this.trigger(clappr.Events.PLAYBACK_HIGHDEFINITIONUPDATE, this.isHighDefinitionInUse());
       }
     }, {
       key: "stateChange",
@@ -387,27 +387,27 @@
               if (this._playbackType !== playbackType) {
                 this.settings.changeCount++;
                 this._playbackType = playbackType;
-                this.trigger(core.Events.PLAYBACK_SETTINGSUPDATE);
+                this.trigger(clappr.Events.PLAYBACK_SETTINGSUPDATE);
               }
 
-              this.trigger(core.Events.PLAYBACK_BUFFERFULL);
-              this.trigger(core.Events.PLAYBACK_PLAY);
+              this.trigger(clappr.Events.PLAYBACK_BUFFERFULL);
+              this.trigger(clappr.Events.PLAYBACK_PLAY);
               break;
             }
 
           case this.YT.PlayerState.PAUSED:
-            this.trigger(core.Events.PLAYBACK_PAUSE);
+            this.trigger(clappr.Events.PLAYBACK_PAUSE);
             break;
 
           case this.YT.PlayerState.BUFFERING:
-            this.trigger(core.Events.PLAYBACK_BUFFERING);
+            this.trigger(clappr.Events.PLAYBACK_BUFFERING);
             break;
 
           case this.YT.PlayerState.ENDED:
             if (this.options.youtubeShowRelated) {
               this.disableMediaControl();
             } else {
-              this.trigger(core.Events.PLAYBACK_ENDED);
+              this.trigger(clappr.Events.PLAYBACK_ENDED);
             }
 
             break;
@@ -427,7 +427,7 @@
           }, 100);
           this.YTPlayer.playVideo();
         } else if (this._ready) {
-          this.trigger(core.Events.PLAYBACK_BUFFERING);
+          this.trigger(clappr.Events.PLAYBACK_BUFFERING);
           this._progressTimer = this._progressTimer || setInterval(function () {
             return _this4.progress();
           }, 100);
@@ -436,8 +436,8 @@
           }, 100);
           this.setupYoutubePlayer();
         } else {
-          this.trigger(core.Events.PLAYBACK_BUFFERING);
-          this.listenToOnce(this, core.Events.PLAYBACK_READY, this.play);
+          this.trigger(clappr.Events.PLAYBACK_BUFFERING);
+          this.listenToOnce(this, clappr.Events.PLAYBACK_READY, this.play);
         }
       }
     }, {
@@ -471,7 +471,7 @@
       value: function progress() {
         if (!this.YTPlayer || !this.YTPlayer.getDuration) return;
         var buffered = this.YTPlayer.getDuration() * this.YTPlayer.getVideoLoadedFraction();
-        this.trigger(core.Events.PLAYBACK_PROGRESS, {
+        this.trigger(clappr.Events.PLAYBACK_PROGRESS, {
           start: 0,
           current: buffered,
           total: this.YTPlayer.getDuration()
@@ -481,7 +481,7 @@
       key: "timeupdate",
       value: function timeupdate() {
         if (!this.YTPlayer || !this.YTPlayer.getDuration) return;
-        this.trigger(core.Events.PLAYBACK_TIMEUPDATE, {
+        this.trigger(clappr.Events.PLAYBACK_TIMEUPDATE, {
           current: this.YTPlayer.getCurrentTime(),
           total: this.YTPlayer.getDuration()
         });
@@ -510,7 +510,7 @@
     }, {
       key: "getPlaybackType",
       value: function getPlaybackType() {
-        return core.Playback.VOD;
+        return clappr.Playback.VOD;
       }
     }, {
       key: "disableMediaControl",
@@ -518,7 +518,7 @@
         this.$el.css({
           'pointer-events': 'auto'
         });
-        this.trigger(core.Events.PLAYBACK_MEDIACONTROL_DISABLE);
+        this.trigger(clappr.Events.PLAYBACK_MEDIACONTROL_DISABLE);
       }
     }, {
       key: "enableMediaControl",
@@ -526,7 +526,7 @@
         this.$el.css({
           'pointer-events': 'none'
         });
-        this.trigger(core.Events.PLAYBACK_MEDIACONTROL_ENABLE);
+        this.trigger(clappr.Events.PLAYBACK_MEDIACONTROL_ENABLE);
       }
     }, {
       key: "render",
@@ -534,7 +534,7 @@
         this.$el.html(this.template({
           id: "yt".concat(this.cid)
         }));
-        var style = core.Styler.getStyleFor(css_248z, {
+        var style = clappr.Styler.getStyleFor(css_248z, {
           baseUrl: this.options.baseUrl
         });
         this.$el.append(style);
@@ -543,7 +543,7 @@
     }]);
 
     return YoutubePlayback;
-  }(core.Playback);
+  }(clappr.Playback);
 
   YoutubePlayback.canPlay = function (source) {
     // eslint-disable-line no-unused-vars

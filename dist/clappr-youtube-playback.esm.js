@@ -3,7 +3,7 @@ import _createClass from '@babel/runtime/helpers/createClass';
 import _inherits from '@babel/runtime/helpers/inherits';
 import _possibleConstructorReturn from '@babel/runtime/helpers/possibleConstructorReturn';
 import _getPrototypeOf from '@babel/runtime/helpers/getPrototypeOf';
-import { template, Events, Log, Playback, Styler } from '@clappr/core';
+import { template, Events, Log, Playback, Styler } from 'clappr';
 import YouTubeIframeLoader from 'youtube-iframe';
 
 function styleInject(css, ref) {
