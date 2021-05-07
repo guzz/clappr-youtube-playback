@@ -58,7 +58,7 @@ export default class YoutubePlayback extends Playback {
   embedYoutubePlayer() {
     let playerVars = {
       controls: 0,
-      autoplay: 1,
+      autoplay: this.options.autoplay ? 1 : 0,
       disablekb: 1,
       enablejsapi: 1,
       iv_load_policy: 3,
