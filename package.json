@@ -1,5 +1,5 @@
 {
-  "name": "clappr-youtube-playback",
+  "name": "@guzzj/clappr-youtube-playback",
   "version": "0.0.4",
   "keywords": [
     "clappr",
@@ -13,6 +13,10 @@
   "source": "src/clappr-youtube-playback.js",
   "main": "dist/clappr-youtube-playback.js",
   "module": "dist/clappr-youtube-playback.esm.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:guzz/clappr-youtube-playback.git"
+  },
   "scripts": {
     "bundle-check": "ANALYZE_BUNDLE=true rollup --config",
     "build": "rollup --config",
