@@ -32,7 +32,7 @@ export default class YoutubePlayback extends Playback {
       default: ['seekbar'],
       right:['fullscreen','volume', 'hd-indicator']
     }
-    const match = this.options.source.match(REG_EXP)
+    const match = this.options.src.match(REG_EXP)
     this._src = match && match[7]
     this.YTPlayer = null
     this.YT = null
