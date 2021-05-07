@@ -62,7 +62,7 @@ var YoutubePlayback = /*#__PURE__*/function (_Playback) {
       right: ['fullscreen', 'volume', 'hd-indicator']
     };
 
-    var match = _this.options.source.match(REG_EXP);
+    var match = _this.options.src.match(REG_EXP);
 
     _this._src = match && match[7];
     _this.YTPlayer = null;
