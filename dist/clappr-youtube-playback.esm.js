@@ -134,7 +134,7 @@ var YoutubePlayback = /*#__PURE__*/function (_Playback) {
 
       var playerVars = {
         controls: 0,
-        autoplay: this.options.autoplay ? 1 : 0,
+        autoplay: this.options.autoPlay ? 1 : 0,
         disablekb: 1,
         enablejsapi: 1,
         iv_load_policy: 3,
@@ -213,7 +213,11 @@ var YoutubePlayback = /*#__PURE__*/function (_Playback) {
     key: "ready",
     value: function ready() {
       this._ready = true;
-      this.play();
+
+      if (this.options.autoPlay) {
+        this.play();
+      }
+
       this.trigger(Events.PLAYBACK_READY, this.name);
     }
   }, {
