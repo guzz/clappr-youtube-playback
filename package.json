@@ -1,6 +1,6 @@
 {
   "name": "@guzzj/clappr-youtube-playback",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "keywords": [
     "clappr",
     "plugin",
@@ -34,7 +34,7 @@
     "@babel/core": "^7.13.15",
     "@babel/plugin-transform-runtime": "^7.13.15",
     "@babel/preset-env": "^7.13.15",
-    "@clappr/core": "^0.4.18",
+    "@guzzj/clappr-core": "^0.4.19",
     "@rollup/plugin-babel": "^5.3.0",
     "@rollup/plugin-commonjs": "^18.0.0",
     "@rollup/plugin-node-resolve": "^11.2.1",
@@ -54,7 +54,7 @@
     "rollup-plugin-visualizer": "^5.3.1"
   },
   "peerDependencies": {
-    "@clappr/core": "^0.4.18"
+    "@guzzj/clappr-core": "^0.4.19"
   },
   "engines": {
     "node": ">=12.0.0"

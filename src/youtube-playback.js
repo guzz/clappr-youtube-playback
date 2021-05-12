@@ -1,4 +1,4 @@
-import { Events, Playback, Styler, template, Log } from '@clappr/core'
+import { Events, Playback, Styler, template, Log } from '@guzzj/clappr-core'
 import YouTubeIframeLoader from 'youtube-iframe'
 
 import playbackStyle from './public/style.css'
