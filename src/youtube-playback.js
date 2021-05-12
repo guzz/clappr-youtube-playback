@@ -1,4 +1,4 @@
-import { Events, Playback, Styler, template, Log } from '@guzzj/clappr-core'
+import { Events, Playback, Styler, template, Log, version } from '@guzzj/clappr-core'
 import YouTubeIframeLoader from 'youtube-iframe'
 
 import playbackStyle from './public/style.css'
@@ -10,6 +10,8 @@ export default class YoutubePlayback extends Playback {
   get name() { return 'youtube_playback' }
 
   get template() { return template(playbackHtml) }
+
+  get supportedVersion() { return { min: version } }
 
   get attributes() {
     return {
